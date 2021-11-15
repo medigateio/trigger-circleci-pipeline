@@ -1,0 +1,19 @@
+name: 'Trigger CircleCI Pipeline'
+description: 'Manually trigger a pipeline in CircleCI'
+inputs:
+  triggered-workflow:
+    description: 'Name of the workflow to trigger'
+    required: true
+    default: 'default'
+  circleci-token:
+    description: 'A personal API token to CircleCI'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run: ${{ github.action_path }}/trigger_circleci_pipeline.sh ${{ inputs.triggered-workflow }}
+      shell: bash
+      env:
+          CIRCLECI_USER_PERSONAL_API_TOKEN: ${{ inputs.circleci-token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: ${{ github.ref }}
