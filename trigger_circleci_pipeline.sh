@@ -57,7 +57,7 @@ elif [ "${pipeline_state}" != "created" ]; then
 
         if [ "${status_response}" = "errored" ]; then
             echo "Failed to create pipeline"
-            return 3
+            exit 3
         elif [ "${status_response}" = "created" ]; then
             echo "Created pipeline"
             break
@@ -70,7 +70,7 @@ elif [ "${pipeline_state}" != "created" ]; then
     if [ "${n}" = 5 ]; then
       # Time out after 5 retries
       echo "Timed out waiting for pipeline creation"
-      return 4
+      exit 4
     fi
 fi
 
