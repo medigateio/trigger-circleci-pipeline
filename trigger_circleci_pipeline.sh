@@ -6,7 +6,7 @@ CIRCLECI_API_BASE="https://circleci.com/api/v2"
 CIRCLECI_PROJECT_API_BASE="${CIRCLECI_API_BASE}/project/github/${GITHUB_REPOSITORY}"
 CIRCLE_WORKFLOW_URL_BASE="https://circleci.com/workflow-run"
 
-branch="${GITHUB_REF#refs/heads/}"
+branch="${BRANCH_REF#refs/heads/}"
 workflow_to_trigger=$1
 
 trigger_pipeline_response=$(
