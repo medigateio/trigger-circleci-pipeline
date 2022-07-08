@@ -24,7 +24,7 @@ trigger_pipeline_response=$(
         -d "{
           \"branch\": \"${branch}\",
           \"parameters\": {
-            \"triggered_workflow\": \"${workflow_to_trigger}\"
+            \"triggered_workflow\": \"${workflow_to_trigger}\",
             \"redefine_mode\": \"${redefine_mode}\"
           }
         }" \
