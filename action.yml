@@ -5,6 +5,9 @@ inputs:
     description: 'Name of the workflow to trigger'
     required: true
     default: 'default'
+  redefine-mode:
+    description: 'Redefine Test Selection Mode'
+    default: 'PASSIVE'
   circleci-token:
     description: 'A personal API token to CircleCI'
     required: true
