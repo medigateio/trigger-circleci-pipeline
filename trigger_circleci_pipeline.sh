@@ -8,6 +8,12 @@ CIRCLE_WORKFLOW_URL_BASE="https://circleci.com/workflow-run"
 
 branch="${BRANCH_REF#refs/heads/}"
 workflow_to_trigger=$1
+redefine_mode=$2
+# If redefine_mode is missing or not "PASSIVE" or "ACTIVE" - set as "PASSIVE"
+if [ -z "$redefine_mode" ] || [ "$redefine_mode" != "PASSIVE" ] && [ "$redefine_mode" != "ACTIVE" ]; then
+  echo "Missing redefine_mode or redefine_mode is not PASSIVE or ACTIVE. Setting as PASSIVE."
+  redefine_mode="PASSIVE"
+fi
 
 trigger_pipeline_response=$(
     curl -sSX POST \
@@ -19,6 +25,7 @@ trigger_pipeline_response=$(
           \"branch\": \"${branch}\",
           \"parameters\": {
             \"triggered_workflow\": \"${workflow_to_trigger}\"
+            \"redefine_mode\": \"${redefine_mode}\"
           }
         }" \
         "${CIRCLECI_PROJECT_API_BASE}/pipeline"
