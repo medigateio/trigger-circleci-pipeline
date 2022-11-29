@@ -8,7 +8,7 @@ CIRCLE_WORKFLOW_URL_BASE="https://circleci.com/workflow-run"
 
 branch="${BRANCH_REF#refs/heads/}"
 workflow_to_trigger=$1
-triggered_key=$2
+triggered_key=${2:-""}
 
 trigger_pipeline_response=$(
     curl -sSX POST \
