@@ -11,10 +11,13 @@ inputs:
   triggered_key:
     description: 'A uuid specific for this job added by user'
     required: false
+  extra-arg:
+    description: 'Extra argument(s) to pass to the workflow'
+    required: false
 runs:
   using: "composite"
   steps:
-    - run: ${{ github.action_path }}/trigger_circleci_pipeline.sh ${{ inputs.triggered-workflow }} ${{ inputs.triggered_key }}
+    - run: ${{ github.action_path }}/trigger_circleci_pipeline.sh "${{ inputs.triggered-workflow }}" "${{ inputs.triggered_key }}" "${{ inputs.extra-arg }}"
       shell: bash
       env:
           CIRCLECI_USER_PERSONAL_API_TOKEN: ${{ inputs.circleci-token }}
