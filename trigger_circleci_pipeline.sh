@@ -8,6 +8,18 @@ CIRCLE_WORKFLOW_URL_BASE="https://circleci.com/workflow-run"
 
 branch="${BRANCH_REF#refs/heads/}"
 
+WORKFLOW_KWARGS="${WORKFLOW_KWARGS-"{}"}"
+
+if [ -z "${TRIGGERED_WORKFLOW}" ]; then
+    echo "No triggered workflow passed"
+    exit 1
+fi
+
+if [ ! $(jq 'has("triggered_workflow")' <<< "${WORKFLOW_KWARGS}") = false ]; then
+    echo "Workflow kwargs should not have an arg named 'triggered_workflow'"
+    exit 1
+fi
+
 request_data=$(
     jq \
         --arg triggered_workflow "${TRIGGERED_WORKFLOW}" \
@@ -24,11 +36,6 @@ trigger_pipeline_response=$(
         -d "${request_data}" \
         "${CIRCLECI_PROJECT_API_BASE}/pipeline"
 )
-
-if [ ! $(jq 'has("triggered_workflow")' <<< "${WORKFLOW_KWARGS}") = false ]; then
-    echo "Workflow kwargs should not have an arg named 'triggered_workflow'"
-    exit 1
-fi
 
 error_message=$(jq -r '.message' <<< "${trigger_pipeline_response}")
 
