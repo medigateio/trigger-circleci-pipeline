@@ -8,23 +8,24 @@ CIRCLE_WORKFLOW_URL_BASE="https://circleci.com/workflow-run"
 
 branch="${BRANCH_REF#refs/heads/}"
 workflow_to_trigger=$1
-triggered_key=$2
-extra_arg=$3
 
 trigger_pipeline_response=$(
+    if [ ! $(jq 'has("triggered_workflow")' <<< "${WORKFLOW_KWARGS}") = false ]; then
+        echo "Workflow kwargs should not have an arg named 'triggered_workflow'"
+	exit 1
+    fi
+    request_data=$(
+    	jq \
+	--argjson triggered_workflow \""${workflow_to_trigger}"\" \
+	--argjson branch \""${branch}"\" \
+	'{"branch": $branch, "parameters": (. += {"triggered_workflow": $triggered_workflow})}' <<< "${WORKFLOW_KWARGS}"
+    )
     curl -sSX POST \
         -H 'Content-type: application/json' \
         -H "Circle-Token: ${CIRCLECI_USER_PERSONAL_API_TOKEN}" \
         -H "x-attribution-login: ${GITHUB_ACTOR}" \
         -H "x-attribution-actor-id: medigate-ci-functions" \
-        -d "{
-          \"branch\": \"${branch}\",
-          \"parameters\": {
-            \"triggered_workflow\": \"${workflow_to_trigger}\",
-            \"triggered_key\": \"${triggered_key}\"
-            \"extra_arg\": \"${extra_arg}\"
-          }
-        }" \
+        -d "${request_data}" \
         "${CIRCLECI_PROJECT_API_BASE}/pipeline"
 )
 
