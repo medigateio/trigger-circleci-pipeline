@@ -15,10 +15,11 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: ${{ github.action_path }}/trigger_circleci_pipeline.sh ${{ inputs.triggered-workflow }}
+    - run: ${{ github.action_path }}/trigger_circleci_pipeline.sh
       shell: bash
       env:
           CIRCLECI_USER_PERSONAL_API_TOKEN: ${{ inputs.circleci-token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           BRANCH_REF: ${{ github.head_ref || github.ref }}
           WORKFLOW_KWARGS: ${{ inputs.kwargs }}
+          TRIGGERED_WORKFLOW: ${{ inputs.triggered-workflow }}

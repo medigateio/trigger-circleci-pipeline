@@ -7,19 +7,15 @@ CIRCLECI_PROJECT_API_BASE="${CIRCLECI_API_BASE}/project/github/${GITHUB_REPOSITO
 CIRCLE_WORKFLOW_URL_BASE="https://circleci.com/workflow-run"
 
 branch="${BRANCH_REF#refs/heads/}"
-workflow_to_trigger=$1
+
+request_data=$(
+    jq \
+        --arg triggered_workflow "${TRIGGERED_WORKFLOW}" \
+        --arg branch "${branch}" \
+        '{"branch": $branch, "parameters": (. += {"triggered_workflow": $triggered_workflow})}' <<< "${WORKFLOW_KWARGS}"
+)
 
 trigger_pipeline_response=$(
-    if [ ! $(jq 'has("triggered_workflow")' <<< "${WORKFLOW_KWARGS}") = false ]; then
-        echo "Workflow kwargs should not have an arg named 'triggered_workflow'"
-	exit 1
-    fi
-    request_data=$(
-    	jq \
-	--argjson triggered_workflow \""${workflow_to_trigger}"\" \
-	--argjson branch \""${branch}"\" \
-	'{"branch": $branch, "parameters": (. += {"triggered_workflow": $triggered_workflow})}' <<< "${WORKFLOW_KWARGS}"
-    )
     curl -sSX POST \
         -H 'Content-type: application/json' \
         -H "Circle-Token: ${CIRCLECI_USER_PERSONAL_API_TOKEN}" \
@@ -29,19 +25,24 @@ trigger_pipeline_response=$(
         "${CIRCLECI_PROJECT_API_BASE}/pipeline"
 )
 
+if [ ! $(jq 'has("triggered_workflow")' <<< "${WORKFLOW_KWARGS}") = false ]; then
+    echo "Workflow kwargs should not have an arg named 'triggered_workflow'"
+    exit 1
+fi
+
 error_message=$(jq -r '.message' <<< "${trigger_pipeline_response}")
 
 if [ "${error_message}" != "null" ]; then
-  echo "Error while trying to trigger workflow \"${workflow_to_trigger}\" on branch \"${branch}\":"
-  echo "${error_message}"
-  exit 1
+    echo "Error while trying to trigger workflow \"${TRIGGERED_WORKFLOW}\" on branch \"${branch}\":"
+    echo "${error_message}"
+    exit 1
 fi
 
 pipeline_number=$(jq -r '.number' <<< "${trigger_pipeline_response}")
 pipeline_id=$(jq -r '.id' <<< "${trigger_pipeline_response}")
 pipeline_state=$(jq -r '.state' <<< "${trigger_pipeline_response}")
 
-echo "Triggered workflow \"${workflow_to_trigger}\" on branch \"${branch}\":"
+echo "Triggered workflow \"${TRIGGERED_WORKFLOW}\" on branch \"${branch}\":"
 echo "Pipeline #${pipeline_number} (${pipeline_id}) in state \"${pipeline_state}\""
 
 if [ "${pipeline_state}" = "errored" ]; then
