@@ -7,8 +7,25 @@ CIRCLECI_PROJECT_API_BASE="${CIRCLECI_API_BASE}/project/github/${GITHUB_REPOSITO
 CIRCLE_WORKFLOW_URL_BASE="https://circleci.com/workflow-run"
 
 branch="${BRANCH_REF#refs/heads/}"
-workflow_to_trigger=$1
-triggered_key=${2:-""}
+
+WORKFLOW_KWARGS="${WORKFLOW_KWARGS-"{}"}"
+
+if [ -z "${TRIGGERED_WORKFLOW}" ]; then
+    echo "No triggered workflow passed"
+    exit 1
+fi
+
+if [ ! $(jq 'has("triggered_workflow")' <<< "${WORKFLOW_KWARGS}") = false ]; then
+    echo "Workflow kwargs should not have an arg named 'triggered_workflow'"
+    exit 1
+fi
+
+request_data=$(
+    jq \
+        --arg triggered_workflow "${TRIGGERED_WORKFLOW}" \
+        --arg branch "${branch}" \
+        '{"branch": $branch, "parameters": (. += {"triggered_workflow": $triggered_workflow})}' <<< "${WORKFLOW_KWARGS}"
+)
 
 trigger_pipeline_response=$(
     curl -sSX POST \
@@ -16,29 +33,23 @@ trigger_pipeline_response=$(
         -H "Circle-Token: ${CIRCLECI_USER_PERSONAL_API_TOKEN}" \
         -H "x-attribution-login: ${GITHUB_ACTOR}" \
         -H "x-attribution-actor-id: medigate-ci-functions" \
-        -d "{
-          \"branch\": \"${branch}\",
-          \"parameters\": {
-            \"triggered_workflow\": \"${workflow_to_trigger}\",
-            \"triggered_key\": \"${triggered_key}\"
-          }
-        }" \
+        -d "${request_data}" \
         "${CIRCLECI_PROJECT_API_BASE}/pipeline"
 )
 
 error_message=$(jq -r '.message' <<< "${trigger_pipeline_response}")
 
 if [ "${error_message}" != "null" ]; then
-  echo "Error while trying to trigger workflow \"${workflow_to_trigger}\" on branch \"${branch}\":"
-  echo "${error_message}"
-  exit 1
+    echo "Error while trying to trigger workflow \"${TRIGGERED_WORKFLOW}\" on branch \"${branch}\":"
+    echo "${error_message}"
+    exit 1
 fi
 
 pipeline_number=$(jq -r '.number' <<< "${trigger_pipeline_response}")
 pipeline_id=$(jq -r '.id' <<< "${trigger_pipeline_response}")
 pipeline_state=$(jq -r '.state' <<< "${trigger_pipeline_response}")
 
-echo "Triggered workflow \"${workflow_to_trigger}\" on branch \"${branch}\":"
+echo "Triggered workflow \"${TRIGGERED_WORKFLOW}\" on branch \"${branch}\":"
 echo "Pipeline #${pipeline_number} (${pipeline_id}) in state \"${pipeline_state}\""
 
 if [ "${pipeline_state}" = "errored" ]; then

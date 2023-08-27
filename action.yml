@@ -8,15 +8,18 @@ inputs:
   circleci-token:
     description: 'A personal API token to CircleCI'
     required: true
-  triggered_key:
-    description: 'A uuid specific for this job added by user'
+  kwargs:
+    description: 'json of extra arguments to pass to the workflow'
     required: false
+    default: '{}'
 runs:
   using: "composite"
   steps:
-    - run: ${{ github.action_path }}/trigger_circleci_pipeline.sh ${{ inputs.triggered-workflow }} ${{ inputs.triggered_key }}
+    - run: ${{ github.action_path }}/trigger_circleci_pipeline.sh
       shell: bash
       env:
           CIRCLECI_USER_PERSONAL_API_TOKEN: ${{ inputs.circleci-token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           BRANCH_REF: ${{ github.head_ref || github.ref }}
+          WORKFLOW_KWARGS: ${{ inputs.kwargs }}
+          TRIGGERED_WORKFLOW: ${{ inputs.triggered-workflow }}
