@@ -99,3 +99,27 @@ for workflow_id in $pipeline_workflows_response
 do
   echo "${CIRCLE_WORKFLOW_URL_BASE}/${workflow_id}"
 done
+
+if [ "${SHOULD_WAIT}" = "true" ]; then
+    echo "Waiting for workflows to finish"
+    for workflow_id in $pipeline_workflows_response
+    do
+        while :; do
+            sleep 10
+            result=$(curl -sSX GET -H "Circle-Token: ${CIRCLECI_USER_PERSONAL_API_TOKEN}" ${CIRCLECI_API_BASE}/workflow/${workflow_id} | jq ".status")
+
+            case $result in
+            \"running\")
+                ;;
+            \"success\")
+                echo "Succeeded"
+                exit 0
+                ;;
+            \"not_run\" | \"failed\" | \"error\" | \"failing\" | \"on_hold\" | \"canceled\" | \"blocked\")
+                echo "Failed: $result"
+                exit 1
+                ;;
+            esac
+        done
+    done
+fi
