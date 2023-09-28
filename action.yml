@@ -8,6 +8,10 @@ inputs:
   circleci-token:
     description: 'A personal API token to CircleCI'
     required: true
+  wait-for-completion:
+    description: 'Whether to wait for the workflow to finish'
+    required: false
+    default: 'false'
   kwargs:
     description: 'json of extra arguments to pass to the workflow'
     required: false
@@ -23,3 +27,4 @@ runs:
           BRANCH_REF: ${{ github.head_ref || github.ref }}
           WORKFLOW_KWARGS: ${{ inputs.kwargs }}
           TRIGGERED_WORKFLOW: ${{ inputs.triggered-workflow }}
+          SHOULD_WAIT: ${{ inputs.wait-for-completion }}
