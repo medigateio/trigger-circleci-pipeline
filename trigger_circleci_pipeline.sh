@@ -58,7 +58,7 @@ if [ "${pipeline_state}" = "errored" ]; then
 elif [ "${pipeline_state}" != "created" ]; then
     n=1
     # Retrying to check the pipeline state 5 times
-    until [ "$n" -ge 5 ]
+    until [ "$n" -ge 10 ]
     do
         echo "Re-checking pipeline state (retry #${n})"
         status_response=$(
@@ -77,7 +77,7 @@ elif [ "${pipeline_state}" != "created" ]; then
         fi
 
         n=$((n+1))
-        sleep 3
+        sleep 5
     done
 
     if [ "${n}" = 5 ]; then
