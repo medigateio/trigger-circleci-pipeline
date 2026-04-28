@@ -1,6 +1,10 @@
 name: 'Trigger CircleCI Pipeline'
 description: 'Manually trigger a pipeline in CircleCI'
 inputs:
+  branch:
+    description: 'Branch to trigger the pipeline on. Overrides the branch detected from the GitHub context when set.'
+    required: false
+    default: ''
   triggered-workflow:
     description: 'Name of the workflow to trigger'
     required: true
@@ -24,7 +28,7 @@ runs:
       env:
           CIRCLECI_USER_PERSONAL_API_TOKEN: ${{ inputs.circleci-token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          BRANCH_REF: ${{ github.head_ref || github.ref }}
+          BRANCH_REF: ${{ inputs.branch != '' && inputs.branch || (github.head_ref || github.ref) }}
           WORKFLOW_KWARGS: ${{ inputs.kwargs }}
           TRIGGERED_WORKFLOW: ${{ inputs.triggered-workflow }}
           SHOULD_WAIT: ${{ inputs.wait-for-completion }}
